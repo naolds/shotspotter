@@ -1,9 +1,12 @@
-import os
 from flask import Flask, jsonify, request, send_file
 from flask_cors import CORS
+from dotenv import load_dotenv
+import os
 import requests
 import io
 import logging
+
+load_dotenv()
 
 app = Flask(__name__)
 CORS(app);
@@ -11,7 +14,7 @@ CORS(app);
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-GOOGLE_STREET_VIEW_API_KEY = os.environ.get('GOOGLE_STREET_VIEW_API_KEY', 'API_KEY')
+GOOGLE_STREET_VIEW_API_KEY = os.getenv("API_KEY")
 
 # https://maps.googleapis.com/maps/api/streetview?size=400x400&location=47.5763831,-122.4211769&fov=80&heading=70&pitch=0&key=YOUR_API_KEY&signature=YOUR_SIGNATURE
 
@@ -26,7 +29,6 @@ GOOGLE_STREET_VIEW_API_KEY = os.environ.get('GOOGLE_STREET_VIEW_API_KEY', 'API_K
 
 @app.route('/get_street_view', methods=['POST'])
 def get_street_view_image():
-    
     try:
         logger.debug(f"Received request headers: {request.headers}")
         logger.debug(f"Received request data: {request.get_json(silent=True)}")
@@ -36,23 +38,12 @@ def get_street_view_image():
         if not data or 'lat' not in data or 'lng' not in data:
             return jsonify({"error": "Lat and Lng are Required."}), 400
         
-        lat = data["lat"]
-        lng = data["lng"]
+        lat = data.get('lat')
+        lng = data.get('lng')
+        heading = data.get('heading')
 
-        if not data:
-            logger.error("No data received")
-            return jsonify({"error": "No data provided"}), 400
-        
-        try:
-            lat = float(data.get('lat'))
-            lng = float(data.get('lng'))
-        except (TypeError, ValueError):
-            logger.error(f"Invalid coordinates: {data}")
-            return jsonify({"error": "Invalid latitude or longitude"}), 400
-        
         size = '600x400'
         pitch = 0
-        heading = 0
         fov = 100
 
         street_view_url = (

@@ -1,7 +1,6 @@
 import { Injectable } from "@angular/core";
 import { HttpClient, HttpErrorResponse } from "@angular/common/http";
 import { Observable, throwError } from "rxjs";
-
 import { catchError, tap } from 'rxjs/operators';
 
 @Injectable({
@@ -12,12 +11,13 @@ export class StreetViewService {
 
     constructor(private http: HttpClient) {}
 
-    getStreetViewImage(lat: number, lng: number): Observable<Blob> {
+    getStreetViewImage(lat: number, lng: number, heading: number): Observable<Blob> {
         console.log('Coordinates from service:', { lat, lng });
         return this.http.post(this.apiUrl,
             {
                 lat,
-                lng
+                lng,
+                heading
             },
             {
                 responseType: 'blob'
