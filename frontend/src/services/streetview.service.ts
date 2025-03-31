@@ -11,6 +11,27 @@ export class StreetViewService {
 
     constructor(private http: HttpClient) {}
 
+    saveStreetViewImage(lat: number, lng: number, heading: number, imageData: string): void {
+        const data = {
+            lat: lat,
+            lng: lng,
+            heading: heading,
+            imageData: imageData // Base64 encoded image
+          };
+
+        console.log(data);
+    
+        // Replace with your Python backend API endpoint
+        const backendUrl = 'http://localhost:5000/save_location';
+
+        this.http.post(backendUrl, data).pipe(
+            tap(response => {
+                console.log('Received response:', response);
+            }),
+            catchError(this.handleError)
+        ).subscribe();
+    }
+
     getStreetViewImage(lat: number, lng: number, heading: number): Observable<Blob> {
         console.log('Coordinates from service:', { lat, lng });
         return this.http.post(this.apiUrl,

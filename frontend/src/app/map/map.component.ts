@@ -18,6 +18,8 @@ export class MapComponent implements AfterViewInit{
   clickedCoord: L.LatLng | null = null;
   marker: L.Marker | null = null;
 
+  savedMarkers: L.Marker[] = [];
+
   // Google Street View API Properties
   streetViewImage: string | null = null;
   heading: number = 0;
@@ -37,15 +39,32 @@ export class MapComponent implements AfterViewInit{
     }, 500);
   }
 
+  // Setup available markers from DB
+  private initMarkers() : void {
+
+  }
+
   // AfterViewInit: Generate Leaflet Map and Add Leaflet Listener to 'clicl' event
   ngAfterViewInit(): void {
     this.initMap();
+    this.initMarkers();
+
+    // Setup map interaction functionality
     this.map.on('click', (e: L.LeafletMouseEvent) => {
       this.marker?.remove();
       this.streetViewImage = null;
-      
       this.clickedCoord = e.latlng;
       
+      /*
+      const markerExists = this.savedMarkers.some(marker => {
+        marker.getLatLng().equals(this.clickedCoord);
+      })
+      if (markerExists) {
+        console.log("Marker exists");
+        return;
+      }
+      */
+
       this.streetViewService.getStreetViewImage(e.latlng.lat, e.latlng.lng, 0)
         .subscribe({
           next: (imageBlob: Blob) => {
@@ -64,6 +83,8 @@ export class MapComponent implements AfterViewInit{
               setTimeout(() => {
                 const rotateButton = document.querySelector('.rotate-button');
                 rotateButton.addEventListener('click', () => this.handleRotate());
+                const saveButton = document.querySelector('.save-button');
+                saveButton.addEventListener('click', () => this.saveLocation());
               }, 100);
             };
             reader.readAsDataURL(imageBlob);
@@ -73,6 +94,13 @@ export class MapComponent implements AfterViewInit{
           }
         });
     });
+  }
+
+  saveLocation() : void {
+    this.savedMarkers.push(this.marker);
+    this.marker.closePopup();
+    this.marker = null;
+    this.streetViewService.saveStreetViewImage(this.clickedCoord.lat, this.clickedCoord.lng, this.heading, this.streetViewImage);
   }
 
   // Rotate image in popup
@@ -91,6 +119,8 @@ export class MapComponent implements AfterViewInit{
             setTimeout(() => {
               const rotateButton = document.querySelector('.rotate-button');
               rotateButton.addEventListener('click', () => this.handleRotate());
+              const saveButton = document.querySelector('.save-button');
+              saveButton.addEventListener('click', () => this.saveLocation());
             }, 100);
           };
           reader.readAsDataURL(imageBlob);
@@ -111,6 +141,7 @@ export class MapComponent implements AfterViewInit{
           '<p>No Street View image available</p>'
         }
         <button class="rotate-button">Rotate</button>
+        <button class="save-button">Save</button>
       </div>
     `;
   }
